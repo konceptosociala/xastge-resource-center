@@ -1,10 +1,16 @@
 module Model.PageModel exposing (..)
 
-import Model.Route exposing (Route(..))
+import Model.Route as Route
+import Model.Route exposing (Route)
+import Model.Page.HomeModel exposing (HomeModel)
 
-type PageModel = A | B | C
+type PageModel 
+   = Home HomeModel 
+   | About ()
+   | NotFound String
 
 fromRoute : Route -> PageModel
 fromRoute route = case route of
-   Home -> A
-   _ -> B
+   Route.Home -> Home {}
+   Route.NotFound page -> NotFound page
+   _ -> NotFound "ERROR"

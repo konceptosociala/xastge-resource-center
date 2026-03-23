@@ -6,21 +6,27 @@ import Model.AccountStatus exposing (AccountStatus)
 import Model.AccountStatus as AccountStatus
 import LucideIcons as LucideIcon
 import Svg.Attributes as Svg
+import Event exposing (Msg)
+import Api.Backend exposing (Backend)
+import Api.Backend as Backend
+import Html.Events exposing (onClick)
+import Event exposing (Msg(..))
 
 type alias NavbarProps =
    { icon : String 
    , brand : String
    , links : List (String, String)
    , accountStatus : AccountStatus
+   , backend : Backend
    }
 
-view : NavbarProps -> Html msg
+view : NavbarProps -> Html Msg
 view props =
    nav [ class "navbar sticky-top navbar-expand-lg bg-dark navbar-dark" ]
       [ div [ class "container" ]
          [ branding props.icon props.brand
          , mobileToggler
-         , navigation props.links props.accountStatus
+         , navigation props.backend props.links props.accountStatus
          ]
       ]
 
@@ -41,10 +47,11 @@ mobileToggler =
          [ LucideIcon.ellipsisVerticalIcon [] ] 
       ]
 
-navigation : List (String, String) -> AccountStatus -> Html msg
-navigation links status = 
+navigation : Backend -> List (String, String) -> AccountStatus -> Html Msg
+navigation backend links status = 
    div [ class "collapse navbar-collapse", id "navbarNavDropdown" ]
       [ ul [ class "navbar-nav nav-underline w-100 align-items-lg-center" ]
+         -- Links
          ( (links |> List.map 
                ( \(name, link) -> 
                   li [ class "nav-item" ]
@@ -52,12 +59,55 @@ navigation links status =
                         [ text name ]
                      ]
                )
-            ) ++ 
-            [ case status of
-               AccountStatus.LoggedOut -> loggedOutView
-               AccountStatus.LoggedIn username -> loggedInView username
+            ) ++
+         -- Account status
+         [ case status of
+            AccountStatus.LoggedOut -> loggedOutView
+            AccountStatus.LoggedIn username -> loggedInView username
+         , apiModeToggler backend
+         ])
+      ]
+
+apiModeToggler : Backend -> Html Msg
+apiModeToggler backend = 
+   li [ class "nav-item dropdown" ]
+      [ button
+         [ class "nav-link dropdown-toggle d-flex align-items-center text-light"
+         , type_ "button"
+         , attribute "data-bs-toggle" "dropdown"
+         , attribute "aria-expanded" "false"
+         ]
+         [ LucideIcon.chevronsLeftRightEllipsisIcon [ Svg.class "me-1" ]
+         , text "API"
+         ]
+      , ul [ class "dropdown-menu dropdown-menu-dark dropdown-menu-end" ]
+         [ li []
+            [ button 
+               [ classList
+                  [ ( "dropdown-item", True )
+                  , ( "text-info", backend == Backend.Rest )
+                  ]
+               , type_ "button"
+               , onClick (SetBackend Backend.Rest)
+               ] 
+               [ LucideIcon.routeIcon [ Svg.class "me-1" ]
+               , text "REST" 
+               ]
             ]
-         )
+         , li []
+            [ button 
+               [ classList
+                  [ ( "dropdown-item", True )
+                  , ( "text-info", backend == Backend.GraphQL )
+                  ]
+               , type_ "button"
+               , onClick (SetBackend Backend.GraphQL)
+               ] 
+               [ LucideIcon.gitGraphIcon [ Svg.class "me-1" ]
+               , text "GraphQL" 
+               ]
+            ]
+         ]
       ]
 
 loggedOutView : Html msg
@@ -75,10 +125,10 @@ loggedInView username =
          , attribute "data-bs-toggle" "dropdown"
          , attribute "aria-expanded" "false"
          ]
-         [ LucideIcon.circleUserRoundIcon [ Svg.class "me-2", Svg.width "18", Svg.height "18" ]
+         [ LucideIcon.circleUserRoundIcon [ Svg.class "me-1" ]
          , text username
          ]
-      , ul [ class "dropdown-menu dropdown-menu-end" ]
+      , ul [ class "dropdown-menu dropdown-menu-dark dropdown-menu-end" ]
          [ li []
             [ a [ class "dropdown-item", href "/dashboard" ] [ text "Dashboard" ]
             ]
