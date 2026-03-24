@@ -7,9 +7,12 @@ import Component.Navbar as Navbar
 import Model.AccountStatus as AccountStatus
 import Model.PageModel exposing (PageModel(..))
 import Component.Page.HomeView as HomeView
+import Component.Page.LoginView as LoginView
+import Component.Page.RegisterView as RegisterView
 
 view : Model -> List (Html Msg)
 view model = 
+   -- Navigation
    [ Navbar.view 
       { icon = "assets/img/favicon.svg"
       , brand = "XastGE Resource Center"
@@ -20,7 +23,16 @@ view model =
       , accountStatus = AccountStatus.LoggedOut
       , backend = model.backend
       }
+   -- Page content
    , case model.page of
-      Home home -> HomeView.view home
+      Home home -> 
+         HomeView.view home
+
+      Login login -> 
+         LoginView.view login
+
+      Register register -> 
+         RegisterView.view register
+
       _ -> text "ERROR"
    ]

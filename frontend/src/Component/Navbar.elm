@@ -71,9 +71,9 @@ navigation backend links status =
 apiModeToggler : Backend -> Html Msg
 apiModeToggler backend = 
    li [ class "nav-item dropdown" ]
-      [ button
+      [ a
          [ class "nav-link dropdown-toggle d-flex align-items-center text-light"
-         , type_ "button"
+         , href "#"
          , attribute "data-bs-toggle" "dropdown"
          , attribute "aria-expanded" "false"
          ]
