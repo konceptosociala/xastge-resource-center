@@ -8,16 +8,56 @@ import Json.Encode as Encode
 import Model.AccountStatus exposing (UserData)
 
 -- Registration
+type alias RegisterRequest =
+   { username : String
+   , email : String
+   , password : String
+   , saveSession : Bool
+   }
+
 register : RegisterRequest -> Cmd Msg
 register req =
    Http.post
       { url = backendUrl ++ "/auth/register"
       , body = Http.jsonBody (registerEncoder req)
-      , expect = Http.expectStringResponse RegisterResponseReceived registerResponseResolver
+      , expect = Http.expectStringResponse RegisterResponseReceived retrieveUserResponseResolver
       }
 
-registerResponseResolver : Http.Response String -> Result Http.Error UserData
-registerResponseResolver response =
+registerEncoder : RegisterRequest -> Encode.Value
+registerEncoder req =
+   Encode.object
+      [ ( "username", Encode.string req.username )
+      , ( "email", Encode.string req.email )
+      , ( "password", Encode.string req.password )
+      , ( "saveSession", Encode.bool req.saveSession )
+      ]
+
+-- Login
+type alias LoginRequest =
+   { username : String
+   , password : String
+   , saveSession : Bool
+   }
+
+login : LoginRequest -> Cmd Msg
+login req =
+   Http.post
+      { url = backendUrl ++ "/auth/login"
+      , body = Http.jsonBody (loginEncoder req)
+      , expect = Http.expectStringResponse LoginResponseReceived retrieveUserResponseResolver
+      }
+      
+loginEncoder : LoginRequest -> Encode.Value
+loginEncoder req =
+   Encode.object
+      [ ( "username", Encode.string req.username )
+      , ( "password", Encode.string req.password )
+      , ( "saveSession", Encode.bool req.saveSession )
+      ]
+
+-- Retrieve User
+retrieveUserResponseResolver : Http.Response String -> Result Http.Error UserData
+retrieveUserResponseResolver response =
    case response of
       Http.BadUrl_ _ ->
          Err (Http.BadBody "Invalid request URL")
@@ -40,41 +80,21 @@ registerResponseResolver response =
                   Err (Http.BadBody "Registration failed")
 
       Http.GoodStatus_ _ body ->
-         case Decode.decodeString registerSuccessDecoder body of
+         case Decode.decodeString retrieveUserSuccessDecoder body of
             Ok userData ->
                Ok userData
 
             Err _ ->
                Err (Http.BadBody "Unexpected response from server")
 
-backendErrorDecoder : Decode.Decoder String
-backendErrorDecoder =
-   Decode.field "message" Decode.string
-
-registerSuccessDecoder : Decode.Decoder UserData
-registerSuccessDecoder =
+retrieveUserSuccessDecoder : Decode.Decoder UserData
+retrieveUserSuccessDecoder =
    Decode.map3 UserData
       (Decode.at [ "user", "username" ] Decode.string)
       (Decode.at [ "user", "email" ] Decode.string)
       (Decode.field "token" Decode.string)
 
-type alias RegisterRequest =
-   { username : String
-   , email : String
-   , password : String
-   , saveSession : Bool
-   }
-
-registerEncoder : RegisterRequest -> Encode.Value
-registerEncoder req =
-   Encode.object
-      [ ( "username", Encode.string req.username )
-      , ( "email", Encode.string req.email )
-      , ( "password", Encode.string req.password )
-      , ( "saveSession", Encode.bool req.saveSession )
-      ]
-
--- 
+-- ...
 getResources : Cmd Msg
 getResources = 
    Http.get
@@ -85,3 +105,8 @@ getResources =
 resourcesDecoder : Decode.Decoder (List String)
 resourcesDecoder =
    Decode.list Decode.string
+
+-- General
+backendErrorDecoder : Decode.Decoder String
+backendErrorDecoder =
+   Decode.field "message" Decode.string

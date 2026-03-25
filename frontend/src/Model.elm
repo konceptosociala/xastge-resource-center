@@ -6,6 +6,7 @@ import Url exposing (Url)
 import Api.Backend exposing (Backend(..))
 import Model.Route exposing (Route)
 import Model.Route exposing (parseUrl)
+import Model.Route as Route
 import Model.PageModel as PageModel
 import Model.PageModel exposing (PageModel)
 import Model.AccountStatus exposing (AccountStatus)
@@ -26,18 +27,46 @@ type alias Model =
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key = 
-   let route = parseUrl url in 
-   (  { key = key 
-      , backend = Rest
-      , route = route
-      , page = PageModel.fromRoute route
-      , accountStatus =
+   let
+      route = parseUrl url
+
+      accountStatus =
          case flags.userData of
             Just userData ->
                LoggedIn userData
 
             Nothing ->
                LoggedOut
+
+      redirectToHome =
+         case ( accountStatus, route ) of
+            ( LoggedIn _, Route.Login ) ->
+               True
+
+            ( LoggedIn _, Route.Register ) ->
+               True
+
+            _ ->
+               False
+
+      redirectToLogin =
+         case ( accountStatus, route ) of
+            ( LoggedOut, Route.Dashboard ) ->
+               True
+
+            _ ->
+               False
+   in
+   (  { key = key 
+      , backend = Rest
+      , route = route
+      , page = PageModel.fromRoute route
+      , accountStatus = accountStatus
       } 
-   , Cmd.none
+   , if redirectToHome then
+        Nav.replaceUrl key "/"
+     else if redirectToLogin then
+        Nav.replaceUrl key "/login"
+     else
+        Cmd.none
    )

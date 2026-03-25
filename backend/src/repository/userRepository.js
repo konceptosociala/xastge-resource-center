@@ -1,7 +1,7 @@
 const User = require("../model/user");
 
-function findByEmail(email) {
-   return User.findOne({ email });
+function findByUsername(username) {
+   return User.findOne({ username });
 }
 
 function findByUsernameOrEmail(username, email) {
@@ -16,7 +16,7 @@ function createUser(data) {
 }
 
 module.exports = {
-   findByEmail,
+   findByUsername,
    findByUsernameOrEmail,
    createUser
 };

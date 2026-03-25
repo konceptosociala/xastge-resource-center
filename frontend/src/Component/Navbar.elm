@@ -63,7 +63,7 @@ navigation backend links status =
          -- Account status
          [ case status of
             AccountStatus.LoggedOut -> loggedOutView
-            AccountStatus.LoggedIn userData -> loggedInView userData.username
+            AccountStatus.LoggedIn userData -> loggedInView Logout userData.username
          , apiModeToggler backend
          ])
       ]
@@ -115,8 +115,8 @@ loggedOutView =
    li [ class "nav-item ms-lg-auto" ]
       [ a [ class "nav-link text-info", href "/login" ] [ text "Login" ] ]
 
-loggedInView : String -> Html msg
-loggedInView username = 
+loggedInView : msg -> String -> Html msg
+loggedInView logoutEvent username = 
    li [ class "nav-item dropdown ms-lg-auto" ]
       [ a
          [ class "nav-link dropdown-toggle d-flex align-items-center text-light"
@@ -133,7 +133,12 @@ loggedInView username =
             [ a [ class "dropdown-item", href "/dashboard" ] [ text "Dashboard" ]
             ]
          , li []
-            [ a [ class "dropdown-item text-danger", href "/logout" ] [ text "Logout" ]
+            [ a 
+               [ class "dropdown-item text-danger"
+               , href "/"
+               , onClick logoutEvent 
+               ] 
+               [ text "Logout" ]
             ]
          ]
       ]

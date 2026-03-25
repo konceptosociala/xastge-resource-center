@@ -46,9 +46,11 @@
     app.ports.saveUserData.subscribe(function(userData) {
       if (userData) {
         localStorage.setItem("xastge_userdata", JSON.stringify(userData));
-      } else {
-        localStorage.removeItem("xastge_userdata");
       }
+    });
+
+    app.ports.cleanUserData.subscribe(function() {
+      localStorage.removeItem("xastge_userdata");
     });
   </script>
 </body>

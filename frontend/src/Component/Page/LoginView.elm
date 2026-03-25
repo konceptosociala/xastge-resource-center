@@ -12,6 +12,7 @@ view : LoginModel -> Html Msg
 view model = 
    Form.formFluid 
       [ Form.heading "Login"
+      , Form.submitStatus model.submitStatus
       , Form.formInput
          { label = "Username" 
          , ty = "text"

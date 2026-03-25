@@ -16,6 +16,8 @@ type Msg
    | SubmitLogin LoginModel
    | UpdateLoginField LoginField String
    | UpdateLoginSaveSession Bool
+   | LoginResponseReceived (Result Http.Error UserData)
+   | Logout
    -- Register
    | SubmitRegister RegisterModel
    | RegisterResponseReceived (Result Http.Error UserData)

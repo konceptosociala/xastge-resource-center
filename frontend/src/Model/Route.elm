@@ -8,6 +8,7 @@ type Route
    | About
    | Login
    | Register
+   | Dashboard
    | NotFound String
 
 routeParser : Parser (Route -> a) a
@@ -16,6 +17,7 @@ routeParser = oneOf
    , map Login (s "login")
    , map Register (s "register")
    , map About (s "about")
+   , map Dashboard (s "dashboard")
    ]
 
 parseUrl : Url.Url -> Route
@@ -30,3 +32,4 @@ getTitle route = case route of
    NotFound _ -> "Page not found | XastGE Resource Center"
    Register -> "Register | XastGE Resource Center"
    Login -> "Login | XastGE Resource Center"
+   Dashboard -> "Dashboard | XastGE Resource Center"

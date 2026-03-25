@@ -7,12 +7,15 @@ import Model.Page.LoginModel exposing (LoginModel)
 import Model.Page.LoginModel as LoginModel
 import Model.Page.RegisterModel exposing (RegisterModel)
 import Model.Page.RegisterModel as RegisterModel
+import Model.Page.DashboardModel exposing (DashboardModel)
+import Model.Page.DashboardModel as DashboardModel
 
 type PageModel 
    = Home HomeModel 
    | About
    | Login LoginModel
    | Register RegisterModel
+   | Dashboard DashboardModel
    | NotFound String
 
 fromRoute : Route -> PageModel
@@ -25,5 +28,7 @@ fromRoute route = case route of
       Login LoginModel.empty
    Route.Register ->
       Register RegisterModel.empty
+   Route.Dashboard ->
+      Dashboard DashboardModel.empty
    Route.NotFound page -> 
       NotFound page

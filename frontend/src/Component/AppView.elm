@@ -8,6 +8,8 @@ import Model.PageModel exposing (PageModel(..))
 import Component.Page.HomeView as HomeView
 import Component.Page.LoginView as LoginView
 import Component.Page.RegisterView as RegisterView
+import Component.Page.DashboardView as DashboardView
+import Model.AccountStatus exposing (AccountStatus(..))
 
 view : Model -> List (Html Msg)
 view model = 
@@ -32,6 +34,11 @@ view model =
 
       Register register -> 
          RegisterView.view register
+
+      Dashboard dashboard ->
+         case model.accountStatus of
+            LoggedOut -> DashboardView.invalidView
+            LoggedIn userData -> DashboardView.view dashboard userData
 
       _ -> text "ERROR"
    ]

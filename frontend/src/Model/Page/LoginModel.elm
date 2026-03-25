@@ -1,4 +1,5 @@
 module Model.Page.LoginModel exposing (..)
+import Model.Page.RegisterModel exposing (SubmitStatus)
 
 type FieldError
    = UsernameError String
@@ -49,15 +50,17 @@ type alias LoginModel =
    , saveSession : Bool
    , loginButtonDisabled : Bool
    , errors : List FieldError
+   , submitStatus : Maybe SubmitStatus
    }
 
 empty : LoginModel
 empty = 
    { username = ""
    , password = ""
-   , saveSession = False 
+   , saveSession = True 
    , loginButtonDisabled = False
    , errors = []
+   , submitStatus = Nothing
    }
 
 type LoginField

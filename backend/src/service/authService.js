@@ -54,11 +54,10 @@ async function register({ username, email, password, saveSession = false }) {
    return buildAuthResponse(user, saveSession);
 }
 
-async function login({ email, password }) {
-   const normalizedEmail = email.trim().toLowerCase();
-   const user = await userRepo.findByEmail(normalizedEmail);
+async function login({ username, password }) {
+   const user = await userRepo.findByUsername(username);
    if (!user) {
-      throw new Error("User not found");
+      throw new Error("User \""+username+"\" not found");
    }
 
    const match = await bcrypt.compare(password, user.password);

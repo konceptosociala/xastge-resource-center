@@ -1,18 +1,20 @@
 module Update exposing (..)
 
+import Url
+import Http
 import Browser.Navigation as Nav
 import Model exposing (Model)
 import Event exposing (Msg(..))
 import Browser exposing (UrlRequest(..))
-import Model.Route exposing (parseUrl)
-import Url
+import Model.Route as Route
+import Model.Route exposing (Route, parseUrl)
 import Model.PageModel as PageModel
 import Model.Page.RegisterModel as Register
 import Model.Page.LoginModel as Login
+import Model.AccountStatus exposing (AccountStatus(..))
 import Api.Rest exposing (register)
 import Api.Ports as Ports
-import Http
-import Model.AccountStatus exposing (AccountStatus(..))
+import Api.Rest exposing (login)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model = 
@@ -25,7 +27,12 @@ update msg model =
                | route = newRoute 
                , page = PageModel.fromRoute newRoute
                }
-            , Cmd.none
+            , if shouldRedirectAuthenticated model.accountStatus newRoute then
+                 Nav.replaceUrl model.key "/"
+              else if shouldRedirectAnonymous model.accountStatus newRoute then
+                 Nav.replaceUrl model.key "/login"
+              else
+                 Cmd.none
             )
 
       LinkClicked req ->
@@ -96,7 +103,10 @@ update msg model =
                            } 
                         , accountStatus = LoggedIn userData
                         }
-                     , Ports.saveUserData userData
+                     , Cmd.batch
+                        [ Ports.saveUserData userData
+                        , Nav.pushUrl model.key "/"
+                        ]
                      )
 
                   Err err ->
@@ -144,12 +154,90 @@ update msg model =
                   | loginButtonDisabled = True
                   }
                }
-            , Cmd.none
+            , login 
+               { username = newModel.username
+               , password = newModel.password
+               , saveSession = newModel.saveSession
+               }
             )
          else
             ({ model | page = PageModel.Login newModel }, Cmd.none)
 
+      LoginResponseReceived result ->
+         case model.page of
+            PageModel.Login lm ->
+               case result of
+                  Ok userData ->
+                     (  { model 
+                        | page = PageModel.Login
+                           { lm
+                           | loginButtonDisabled = False
+                           , submitStatus = Just (Register.Success "Logged in successfully")
+                           } 
+                        , accountStatus = LoggedIn userData
+                        }
+                     , Cmd.batch
+                        [ Ports.saveUserData userData
+                        , Nav.pushUrl model.key "/"
+                        ]
+                     )
+
+                  Err err ->
+                     ( { model
+                        | page = PageModel.Login
+                           { lm
+                           | loginButtonDisabled = False
+                           , submitStatus = Just (Register.Error (httpErrorToMessage err))
+                           }
+                        }
+                     , Cmd.none
+                     )
+
+            _ ->
+               ( model, Cmd.none )
+
+      Logout -> 
+         ( { model | accountStatus = LoggedOut }
+         , Cmd.batch
+            [ Ports.cleanUserData ()
+            , Nav.pushUrl model.key "/login"
+            ]
+         )
+
       _ -> (model, Cmd.none)
+
+
+shouldRedirectAuthenticated : AccountStatus -> Route -> Bool
+shouldRedirectAuthenticated accountStatus route =
+   case accountStatus of
+      LoggedIn _ ->
+         case route of
+            Route.Login ->
+               True
+
+            Route.Register ->
+               True
+
+            _ ->
+               False
+
+      LoggedOut ->
+         False
+
+
+shouldRedirectAnonymous : AccountStatus -> Route -> Bool
+shouldRedirectAnonymous accountStatus route =
+   case accountStatus of
+      LoggedOut ->
+         case route of
+            Route.Dashboard ->
+               True
+
+            _ ->
+               False
+
+      LoggedIn _ ->
+         False
 
 
 httpErrorToMessage : Http.Error -> String
